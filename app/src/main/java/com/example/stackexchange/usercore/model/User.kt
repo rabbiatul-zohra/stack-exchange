@@ -2,9 +2,6 @@ package com.example.stackexchange.usercore.model
 
 import java.time.LocalDate
 
-data class UserList(
-    val users: List<User>
-)
 data class User(
     val id: Int,
     val name: String,

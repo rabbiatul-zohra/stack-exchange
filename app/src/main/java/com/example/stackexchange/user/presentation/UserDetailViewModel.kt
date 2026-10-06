@@ -14,6 +14,7 @@ data class UserDetailUiModel(
     val name: String,
     val reputation: String,
     val location: String?,
+    val imageUrl: String,
     val creationDate: String
 )
 
@@ -44,6 +45,7 @@ class UserDetailViewModel(
                     name = user.name,
                     reputation = user.reputation.toString(),
                     location = user.location ?: "Not provided",
+                    imageUrl = user.profileImageUrl,
                     creationDate = user.creationDate.toString()
                 )
 
