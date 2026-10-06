@@ -66,6 +66,9 @@ fun AppNavHost(
 
             UserDetailScreen(
                viewModel = userDetailViewModel,
+                onBackClick = {
+                    navController.popBackStack()
+                }
             )
         }
     }

@@ -14,9 +14,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,6 +33,7 @@ import com.example.stackexchange.user.presentation.UiState
 import com.example.stackexchange.user.presentation.UsersViewModel
 import com.example.stackexchange.usercore.model.User
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchUsers(
     viewModel: UsersViewModel,
@@ -38,78 +42,91 @@ fun SearchUsers(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(36.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+    Scaffold(
+        modifier = modifier,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text("Stack Exchange")
+                },
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(40.dp),
         ) {
 
-            OutlinedTextField(
-                value = query,
-                onValueChange = { newValue ->
-                    query = newValue
-                },
-                modifier = Modifier.weight(1f),
-                placeholder = {
-                    Text("Search users")
-                },
-                singleLine = true
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { newValue ->
+                        query = newValue
+                    },
+                    modifier = Modifier.weight(1f),
+                    placeholder = {
+                        Text("Search users")
+                    },
+                    singleLine = true
+                )
+
+                Spacer(
+                    modifier = Modifier.width(8.dp)
+                )
+
+                Button(
+                    onClick = {
+                        viewModel.search(query)
+                    },
+                    enabled = query.isNotBlank()
+                ) {
+                    Text("Search")
+                }
+            }
 
             Spacer(
-                modifier = Modifier.width(8.dp)
+                modifier = Modifier.height(16.dp)
             )
-
-            Button(
-                onClick = {
-                    viewModel.search(query)
-                },
-                enabled = query.isNotBlank()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
             ) {
-                Text("Search")
-            }
-        }
+                when (val currentState = state) {
 
-        Spacer(
-            modifier = Modifier.height(16.dp)
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            when (val currentState = state) {
+                    UiState.Loading -> {
+                        CircularProgressIndicator()
+                    }
 
-                UiState.Loading -> {
-                    CircularProgressIndicator()
-                }
-
-                is UiState.Success -> {
-                    LazyColumn {
-                        items(
-                            items = currentState.users,
-                            key = { it.id }
-                        ) { user ->
-                            UserRow(
-                                user = user,
-                                onClick = { onUserClick(user.id) }
-                            )
+                    is UiState.Success -> {
+                        LazyColumn {
+                            items(
+                                items = currentState.users,
+                                key = { it.id }
+                            ) { user ->
+                                UserRow(
+                                    user = user,
+                                    onClick = { onUserClick(user.id) }
+                                )
+                            }
                         }
                     }
+
+                    is UiState.Error -> {
+                        Text(currentState.message)
+                    }
+
+                    UiState.Idle -> Unit
                 }
 
-                is UiState.Error -> {
-                    Text(currentState.message)
-                }
-
-                UiState.Idle -> Unit
             }
-
         }
     }
 }
