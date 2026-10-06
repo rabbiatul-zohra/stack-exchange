@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private val usersViewModel: UsersViewModel by viewModels {
-        UsersViewModelFactory(repository)
+        ViewModelFactory(repository)
     }
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             StackexchangeTheme() {
-            AppNavHost(usersViewModel)
+            AppNavHost(usersViewModel, repository)
             }
         }
     }

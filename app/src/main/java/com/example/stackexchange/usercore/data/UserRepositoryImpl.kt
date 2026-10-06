@@ -9,6 +9,7 @@ import java.io.IOException
 
 interface UserRepository {
     fun getUsers(query: String) : Flow<List<User>>
+    fun getUserById(id: Int): Flow<User>
 }
 class UserRepositoryImpl(
     private val service: UserService,
@@ -23,6 +24,20 @@ class UserRepositoryImpl(
 
             emit(users)
 
+        } catch (exception: HttpException) {
+            throw exception
+
+        } catch (exception: IOException) {
+            throw exception
+        }
+    }
+
+    override fun getUserById(id: Int): Flow<User> = flow {
+        try {
+            val response = service.getUserById(id)
+            val user = response.items.firstOrNull()
+                ?: throw IllegalStateException("User not found")
+            emit(user.toUser())
         } catch (exception: HttpException) {
             throw exception
 
