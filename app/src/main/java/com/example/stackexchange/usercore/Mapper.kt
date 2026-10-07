@@ -1,5 +1,9 @@
 package com.example.stackexchange.usercore
 
+import com.example.stackexchange.usercore.model.Badge
+import com.example.stackexchange.usercore.model.BadgeResponse
+import com.example.stackexchange.usercore.model.TopTag
+import com.example.stackexchange.usercore.model.TopTagResponse
 import com.example.stackexchange.usercore.model.User
 import com.example.stackexchange.usercore.model.UserResponse
 import java.time.Instant
@@ -16,3 +20,15 @@ fun UserResponse.toUser() = User(
         .atZone(ZoneId.systemDefault())
         .toLocalDate()
 )
+
+fun TopTagResponse.toTopTag(): TopTag =
+    TopTag(
+        name = tag_name
+    )
+
+fun BadgeResponse.toBadge(): Badge =
+    Badge(
+        id = badge_id,
+        name = name,
+        rank = rank
+    )

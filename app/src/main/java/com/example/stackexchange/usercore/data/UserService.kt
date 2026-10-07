@@ -1,5 +1,6 @@
 package com.example.stackexchange.usercore.data
 
+import com.example.stackexchange.usercore.model.BadgesListResponse
 import com.example.stackexchange.usercore.model.SearchUserListResponse
 import com.example.stackexchange.usercore.model.TopTagsListResponse
 import retrofit2.http.GET
@@ -30,4 +31,10 @@ interface UserService {
         @Path("id") userId: Int,
         @Query("site") site: String = SITE_QUERY
     ): TopTagsListResponse
+
+    @GET("users/{id}/badges")
+    suspend fun getUserBadges(
+        @Path("id") userId: Int,
+        @Query("site") site: String = SITE_QUERY
+    ): BadgesListResponse
 }

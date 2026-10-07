@@ -1,8 +1,10 @@
 package com.example.stackexchange.usercore.data
 
 import android.net.http.HttpException
+import com.example.stackexchange.usercore.model.Badge
 import com.example.stackexchange.usercore.model.TopTag
 import com.example.stackexchange.usercore.model.User
+import com.example.stackexchange.usercore.toBadge
 import com.example.stackexchange.usercore.toTopTag
 import com.example.stackexchange.usercore.toUser
 import kotlinx.coroutines.flow.Flow
@@ -13,6 +15,7 @@ interface UserRepository {
     fun getUsers(query: String) : Flow<List<User>>
     fun getUserById(id: Int): Flow<User>
     fun getUserTopTags(id: Int): Flow<List<TopTag>>
+    fun getUserBadges(id: Int): Flow<List<Badge>>
 
 }
 class UserRepositoryImpl(
@@ -57,6 +60,22 @@ class UserRepositoryImpl(
                 it.toTopTag()
             }
             emit(topTags)
+        } catch (exception: HttpException) {
+            throw exception
+
+        } catch (exception: IOException) {
+            throw exception
+        }
+    }
+
+    override fun getUserBadges(id: Int): Flow<List<Badge>> = flow {
+        try {
+            val response = service.getUserBadges(id)
+            val badges = response.items.map { badgeResponse ->
+                badgeResponse.toBadge()
+            }
+
+            emit(badges)
         } catch (exception: HttpException) {
             throw exception
 

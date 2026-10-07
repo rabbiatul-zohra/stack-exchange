@@ -1,5 +1,8 @@
 package com.example.stackexchange.usercore.data
 
+import com.example.stackexchange.usercore.model.Badge
+import com.example.stackexchange.usercore.model.BadgeResponse
+import com.example.stackexchange.usercore.model.BadgesListResponse
 import com.example.stackexchange.usercore.model.SearchUserListResponse
 import com.example.stackexchange.usercore.model.TopTag
 import com.example.stackexchange.usercore.model.TopTagResponse
@@ -13,18 +16,16 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
+import org.junit.Before
 import org.junit.Test
 import java.io.IOException
 import java.time.LocalDate
 
 class UserRepositoryImplTest {
 
+    private lateinit var repository: UserRepository
     private val service: UserService = mockk()
-
-    private val repository = UserRepositoryImpl(
-        service = service
-    )
-
+    private val userId = 1
     private val user = User(
         id = 1,
         name = "test user",
@@ -43,6 +44,48 @@ class UserRepositoryImplTest {
         creation_date = 1577836800L
     )
 
+    private val badgesListResponse = BadgesListResponse(
+        items = listOf(
+            BadgeResponse(
+                badge_id = 1,
+                name = "test1",
+                rank = "bronze"
+            ),
+            BadgeResponse(
+                badge_id = 2,
+                name = "test2",
+                rank = "silver"
+            ),
+            BadgeResponse(
+                badge_id = 3,
+                name = "test3",
+                rank = "gold"
+            )
+        )
+    )
+
+    private val badge = listOf(
+        Badge(
+            id = 1,
+            name = "test1",
+            rank = "bronze"
+        ),
+        Badge(
+            id = 2,
+            name = "test2",
+            rank = "silver"
+        ),
+        Badge(
+            id = 3,
+            name = "test3",
+            rank = "gold"
+        )
+    )
+
+    @Before
+    fun setup() {
+        repository = UserRepositoryImpl(service)
+    }
     @Test
     fun `given users response when getUsers is called then mapped users are returned`() =
         runTest {
@@ -55,6 +98,7 @@ class UserRepositoryImplTest {
             )
 
             coEvery { service.getUsers(query) } returns response
+            repository = UserRepositoryImpl(service)
 
             // When
             val result = repository.getUsers(query).first()
@@ -76,6 +120,7 @@ class UserRepositoryImplTest {
 
             coEvery { service.getUsers(query) } returns
                     SearchUserListResponse(items = emptyList())
+            repository = UserRepositoryImpl(service)
 
             // When
             val result = repository.getUsers(query).first()
@@ -94,6 +139,7 @@ class UserRepositoryImplTest {
             val query = "test"
 
             coEvery { service.getUsers(query) } throws IOException("Network error")
+            repository = UserRepositoryImpl(service)
 
             // When
             try {
@@ -114,11 +160,11 @@ class UserRepositoryImplTest {
         runTest {
 
             // Given
-            val userId = 1
 
             val response = SearchUserListResponse(items = listOf(userResponse))
 
             coEvery { service.getUserById(userId) } returns response
+            repository = UserRepositoryImpl(service)
 
             // When
             val result = repository.getUserById(userId).first()
@@ -140,6 +186,7 @@ class UserRepositoryImplTest {
 
             coEvery { service.getUserById(userId) } returns
                     SearchUserListResponse(items = emptyList())
+            repository = UserRepositoryImpl(service)
 
             // When
             try {
@@ -162,9 +209,9 @@ class UserRepositoryImplTest {
         runTest {
 
             // Given
-            val userId = 1
 
             coEvery { service.getUserById(userId) } throws IOException("Network error")
+            repository = UserRepositoryImpl(service)
 
             // When
             try {
@@ -190,7 +237,6 @@ class UserRepositoryImplTest {
         runTest {
 
             // Given
-            val userId = 1
 
             val response = TopTagsListResponse(
                 items = listOf(
@@ -206,9 +252,9 @@ class UserRepositoryImplTest {
                 )
             )
 
-            coEvery {
-                service.getUserTopTags(userId)
-            } returns response
+            coEvery { service.getUserTopTags(userId) } returns response
+
+            repository = UserRepositoryImpl(service)
 
             // When
             val result = repository.getUserTopTags(userId).first()
@@ -231,10 +277,8 @@ class UserRepositoryImplTest {
         runTest {
 
             // Given
-            val userId = 1
-
-            coEvery { service.getUserTopTags(userId) } returns
-                    TopTagsListResponse(items = emptyList())
+            coEvery { service.getUserTopTags(userId) } returns TopTagsListResponse(items = emptyList())
+            repository = UserRepositoryImpl(service)
 
             // When
             val result = repository.getUserTopTags(userId).first()
@@ -250,10 +294,10 @@ class UserRepositoryImplTest {
         runTest {
 
             // Given
-            val userId = 1
             val errorMessage = "Network error"
 
             coEvery { service.getUserTopTags(userId) } throws IOException(errorMessage)
+            repository = UserRepositoryImpl(service)
 
             // When
             try {
@@ -268,5 +312,67 @@ class UserRepositoryImplTest {
             }
 
             coVerify(exactly = 1) { service.getUserTopTags(userId) }
+        }
+
+    @Test
+    fun `given badges response when getUserBadges is called then mapped badges are returned`() =
+        runTest {
+
+            // Given
+            coEvery { service.getUserBadges(userId) } returns badgesListResponse
+            repository = UserRepositoryImpl(service)
+
+            // When
+            val result = repository.getUserBadges(userId).first()
+
+            // Then
+            assertEquals(badge, result)
+
+            coVerify(exactly = 1) { service.getUserBadges(userId)
+            }
+        }
+
+    @Test
+    fun `given empty badges response when getUserBadges is called then empty list is returned`() =
+        runTest {
+
+            // Given
+            coEvery { service.getUserBadges(userId) } returns BadgesListResponse(items = emptyList())
+            repository = UserRepositoryImpl(service)
+
+            // When
+            val result = repository.getUserBadges(userId).first()
+
+            // Then
+            assertEquals(emptyList<Badge>(), result)
+
+            coVerify(exactly = 1) { service.getUserBadges(userId) }
+        }
+
+    @Test
+    fun `given service throws IOException when getUserBadges is called then exception is propagated`() =
+        runTest {
+
+            // Given
+            val errorMessage = "Network error"
+
+            coEvery { service.getUserBadges(userId) } throws IOException(errorMessage)
+            repository = UserRepositoryImpl(service)
+
+            // When
+            try {
+                repository
+                    .getUserBadges(userId)
+                    .first()
+
+                fail("Expected IOException")
+
+            } catch (exception: IOException) {
+
+                // Then
+                assertEquals(errorMessage, exception.message)
+            }
+
+            coVerify(exactly = 1) { service.getUserBadges(userId) }
         }
 }
