@@ -13,7 +13,7 @@ import com.example.stackexchange.network.RetrofitClient
 import com.example.stackexchange.usercore.data.UserRepositoryImpl
 import kotlin.getValue
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "NewApi")
 class MainActivity : ComponentActivity() {
     private val repository by lazy {
         UserRepositoryImpl(

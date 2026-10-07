@@ -46,62 +46,6 @@ The UI observes immutable `StateFlow` state exposed by the ViewModels. ViewModel
 
 The repository communicates with the Stack Exchange API through Retrofit and maps API response DTOs into domain models before exposing them to the rest of the application.
 
-```mermaid
-flowchart TD
-    UI["Jetpack Compose UI"] --> VM["ViewModel"]
-
-    VM --> STATE["StateFlow / UI State"]
-    STATE --> UI
-
-    VM --> REPO["UserRepository"]
-
-    REPO --> IMPL["UserRepositoryImpl"]
-
-    IMPL --> SERVICE["Retrofit UserService"]
-
-    SERVICE --> API["Stack Exchange API"]
-
-    API --> SERVICE
-
-    SERVICE --> DTO["API Response DTOs"]
-
-    DTO --> MAPPER["Mappers"]
-
-    MAPPER --> DOMAIN["Domain Models"]
-
-    DOMAIN --> IMPL
-
-    IMPL --> VM
-```
-
-### Data Flow
-
-For example, loading a user's details follows this flow:
-
-```mermaid
-sequenceDiagram
-    participant UI as Compose UI
-    participant VM as UserDetailViewModel
-    participant R as UserRepository
-    participant API as Stack Exchange API
-
-    UI->>VM: Observe userDetailUiState
-
-    VM->>R: getUserById(userId)
-    VM->>R: getUserTopTags(userId)
-    VM->>R: getUserBadges(userId)
-
-    R->>API: Request user
-    R->>API: Request top tags
-    R->>API: Request badges
-
-    API-->>R: API responses
-    R-->>VM: Domain models
-
-    VM->>VM: Combine data
-    VM-->>UI: Loading / Success / Error
-```
-
 The detail ViewModel combines the user, top tags, and badge streams into a single `UserDetailUiState`. This means the Compose screen only needs to observe one source of UI state.
 
 ## Project Structure
