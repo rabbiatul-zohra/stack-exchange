@@ -22,7 +22,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import java.io.IOException
-import java.time.LocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class UsersViewModelTest {
@@ -39,7 +38,7 @@ class UsersViewModelTest {
             reputation = 150,
             profileImageUrl = "",
             location = "New York",
-            creationDate = LocalDate.of(2019, 5, 12)
+            creationDate = "2020-01-01"
         ),
         User(
             id = 2,
@@ -47,7 +46,7 @@ class UsersViewModelTest {
             reputation = 100,
             profileImageUrl = "",
             location = "London",
-            creationDate = LocalDate.of(2020, 1, 1)
+            creationDate = "2020-01-01"
         )
     )
 
@@ -250,7 +249,7 @@ class UsersViewModelTest {
                 reputation = 250,
                 profileImageUrl = "",
                 location = "San Francisco",
-                creationDate = LocalDate.of(2021, 3, 15)
+                creationDate = "2020-01-01"
             )
 
             every {

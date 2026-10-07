@@ -13,6 +13,7 @@ import com.example.stackexchange.network.RetrofitClient
 import com.example.stackexchange.usercore.data.UserRepositoryImpl
 import kotlin.getValue
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 class MainActivity : ComponentActivity() {
     private val repository by lazy {
         UserRepositoryImpl(
@@ -23,7 +24,6 @@ class MainActivity : ComponentActivity() {
     private val usersViewModel: UsersViewModel by viewModels {
         ViewModelFactory(repository)
     }
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

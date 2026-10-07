@@ -20,7 +20,6 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import java.io.IOException
-import java.time.LocalDate
 
 class UserRepositoryImplTest {
 
@@ -33,7 +32,7 @@ class UserRepositoryImplTest {
         reputation = 150,
         profileImageUrl = "https://example.com/test.jpg",
         location = "Manchester",
-        creationDate = LocalDate.of(2020, 1, 1)
+        creationDate = "2020-01-01"
     )
 
     private val userResponse = UserResponse(

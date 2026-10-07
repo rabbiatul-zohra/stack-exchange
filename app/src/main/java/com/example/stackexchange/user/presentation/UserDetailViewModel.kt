@@ -53,7 +53,7 @@ class UserDetailViewModel(
                     reputation = user.reputation.toString(),
                     location = user.location ?: "Not provided",
                     imageUrl = user.profileImageUrl,
-                    creationDate = user.creationDate.toString(),
+                    creationDate = user.creationDate,
                     topTags = topTags.map { it.name },
                     badges = badges.map { badge ->
                         BadgeUiState(

@@ -6,8 +6,9 @@ import com.example.stackexchange.usercore.model.TopTag
 import com.example.stackexchange.network.TopTagResponse
 import com.example.stackexchange.usercore.model.User
 import com.example.stackexchange.network.UserResponse
-import java.time.Instant
-import java.time.ZoneId
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 fun UserResponse.toUser() = User(
     id = user_id,
@@ -15,10 +16,7 @@ fun UserResponse.toUser() = User(
     reputation = reputation,
     profileImageUrl = profile_image,
     location = location,
-    creationDate = Instant
-        .ofEpochSecond(creation_date)
-        .atZone(ZoneId.systemDefault())
-        .toLocalDate()
+    creationDate = creation_date.toFormattedDate()
 )
 
 fun TopTagResponse.toTopTag(): TopTag =
@@ -32,3 +30,15 @@ fun BadgeResponse.toBadge(): Badge =
         name = name,
         rank = rank
     )
+
+
+fun Long.toFormattedDate(): String {
+    val date = Date(this * 1000L)
+
+    val formatter = SimpleDateFormat(
+        "yyyy-MM-dd",
+        Locale.getDefault()
+    )
+
+    return formatter.format(date)
+}

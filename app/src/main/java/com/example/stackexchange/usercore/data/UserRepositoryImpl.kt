@@ -1,6 +1,8 @@
 package com.example.stackexchange.usercore.data
 
 import android.net.http.HttpException
+import android.os.Build
+import androidx.annotation.RequiresExtension
 import com.example.stackexchange.network.UserService
 import com.example.stackexchange.usercore.model.Badge
 import com.example.stackexchange.usercore.model.TopTag
@@ -19,6 +21,8 @@ interface UserRepository {
     fun getUserBadges(id: Int): Flow<List<Badge>>
 
 }
+
+@RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 class UserRepositoryImpl(
     private val service: UserService,
 ) : UserRepository {

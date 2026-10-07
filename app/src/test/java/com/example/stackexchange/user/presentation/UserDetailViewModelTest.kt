@@ -23,7 +23,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import java.io.IOException
-import java.time.LocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserDetailViewModelTest {
@@ -503,7 +502,7 @@ class UserDetailViewModelTest {
             reputation = reputation,
             profileImageUrl = "https://example.com/image.jpg",
             location = location,
-            creationDate = LocalDate.of(2020, 1, 1)
+            creationDate = "2020-01-01"
         )
     }
 }
