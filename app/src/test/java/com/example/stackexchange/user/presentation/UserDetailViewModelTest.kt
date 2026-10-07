@@ -1,6 +1,7 @@
 package com.example.stackexchange.user.presentation
 
 import com.example.stackexchange.usercore.data.UserRepository
+import com.example.stackexchange.usercore.model.Badge
 import com.example.stackexchange.usercore.model.TopTag
 import com.example.stackexchange.usercore.model.User
 import io.mockk.every
@@ -35,11 +36,45 @@ class UserDetailViewModelTest {
         TopTag(name = "test3")
     )
 
+    private val badges = listOf(
+        Badge(
+            id = 1,
+            name = "test1",
+            rank = "bronze"
+        ),
+        Badge(
+            id = 2,
+            name = "test2",
+            rank = "silver"
+        ),
+        Badge(
+            id = 3,
+            name = "test3",
+            rank = "gold"
+        )
+    )
+
+    private val badgeUiState = listOf(
+        BadgeUiState(
+            name = "test1",
+            rank = "bronze"
+        ),
+        BadgeUiState(
+            name = "test2",
+            rank = "silver"
+        ),
+        BadgeUiState(
+            name = "test3",
+            rank = "gold"
+        )
+    )
+
     private val topTagNames = listOf("test1", "test2", "test3")
     private val userId = 1
     private var repository = mockk<UserRepository>()  {
         every { getUserById(1) } returns flowOf(createUser())
         every { getUserTopTags(userId) } returns flowOf(topTags)
+        every { getUserBadges(userId) } returns flowOf(badges)
     }
     private lateinit var viewModel: UserDetailViewModel
 
@@ -107,6 +142,7 @@ class UserDetailViewModelTest {
                             imageUrl = "https://example.com/image.jpg",
                             creationDate = "2020-01-01",
                             topTags = topTagNames,
+                            badges = badgeUiState
                         )
                     )
                 ),
@@ -195,7 +231,7 @@ class UserDetailViewModelTest {
                 listOf(
                     UserDetailUiState.Loading,
                     UserDetailUiState.Error(
-                        "Failed to retrieve user or top tags"
+                        ERROR_MESSAGE
                     )
                 ),
                 states
@@ -217,6 +253,7 @@ class UserDetailViewModelTest {
                 createUser(id = userId)
             )
             every { repository.getUserTopTags(userId) } returns flowOf(emptyList())
+            every { repository.getUserBadges(userId) } returns flowOf(emptyList())
 
             viewModel = UserDetailViewModel(
                 userId = userId,
@@ -314,11 +351,9 @@ class UserDetailViewModelTest {
         runTest(testDispatcher) {
 
             // Given
-            val errorMessage = "Failed to retrieve user or top tags"
-
             every { repository.getUserById(userId) } returns flowOf(createUser(id = userId))
 
-            every { repository.getUserTopTags(userId) } returns flow { throw IOException(errorMessage) }
+            every { repository.getUserTopTags(userId) } returns flow { throw IOException(ERROR_MESSAGE) }
 
             viewModel = UserDetailViewModel(
                 userId = userId,
@@ -342,7 +377,7 @@ class UserDetailViewModelTest {
             assertEquals(
                 listOf(
                     UserDetailUiState.Loading,
-                    UserDetailUiState.Error(errorMessage)
+                    UserDetailUiState.Error(ERROR_MESSAGE)
                 ),
                 states
             )
@@ -350,6 +385,112 @@ class UserDetailViewModelTest {
             collectJob.cancel()
         }
 
+    @Test
+    fun `given user has badges when user details are loaded then badges are mapped to ui model`() =
+        runTest(testDispatcher) {
+
+            // Given
+            val states = mutableListOf<UserDetailUiState>()
+
+            val collectJob = backgroundScope.launch(
+                UnconfinedTestDispatcher(testScheduler)
+            ) {
+                viewModel.userDetailUiState.collect {
+                    states.add(it)
+                }
+            }
+
+            // When
+            runCurrent()
+
+            // Then
+            val successState = states
+                .filterIsInstance<UserDetailUiState.Success>()
+                .first()
+
+            assertEquals(badgeUiState, successState.user.badges)
+
+            verify(exactly = 1) { repository.getUserBadges(userId) }
+
+            collectJob.cancel()
+        }
+
+    @Test
+    fun `given user has no badges when user details are loaded then success contains empty badges`() =
+        runTest(testDispatcher) {
+
+            // Given
+
+            every { repository.getUserBadges(userId) } returns flowOf(emptyList())
+
+            val viewModel = UserDetailViewModel(
+                userId = userId,
+                repository = repository
+            )
+
+            val states = mutableListOf<UserDetailUiState>()
+
+            val collectJob = backgroundScope.launch(
+                UnconfinedTestDispatcher(testScheduler)
+            ) {
+                viewModel.userDetailUiState.collect {
+                    states.add(it)
+                }
+            }
+
+            // When
+            runCurrent()
+
+            // Then
+            val successState = states
+                .filterIsInstance<UserDetailUiState.Success>()
+                .first()
+
+            assertEquals(emptyList<BadgeUiState>(), successState.user.badges)
+
+            collectJob.cancel()
+        }
+
+    @Test
+    fun `given badges request fails when user details are loaded then error state is emitted`() =
+        runTest(testDispatcher) {
+
+            // Given
+            every { repository.getUserBadges(userId) } returns
+                    flow { throw IOException(ERROR_MESSAGE) }
+
+            val viewModel = UserDetailViewModel(
+                userId = userId,
+                repository = repository
+            )
+
+            val states = mutableListOf<UserDetailUiState>()
+
+            val collectJob = backgroundScope.launch(
+                UnconfinedTestDispatcher(testScheduler)
+            ) {
+                viewModel.userDetailUiState.collect {
+                    states.add(it)
+                }
+            }
+
+            // When
+            runCurrent()
+
+            // Then
+            assertEquals(
+                listOf(
+                    UserDetailUiState.Loading,
+                    UserDetailUiState.Error(ERROR_MESSAGE)
+                ),
+                states
+            )
+            collectJob.cancel()
+        }
+
+    companion object {
+        private const val ERROR_MESSAGE = "Failed to retrieve user details"
+    }
     private fun createUser(
         id: Int = 1,
         name: String = "test user",

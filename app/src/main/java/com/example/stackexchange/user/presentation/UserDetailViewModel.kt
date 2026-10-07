@@ -9,13 +9,19 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
+data class BadgeUiState(
+    val name: String,
+    val rank: String
+)
+
 data class UserDetailUiModel(
     val name: String,
     val reputation: String,
     val location: String?,
     val imageUrl: String,
     val creationDate: String,
-    val topTags: List<String>
+    val topTags: List<String>,
+    val badges: List<BadgeUiState>
 )
 
 sealed interface UserDetailUiState {
@@ -40,14 +46,21 @@ class UserDetailViewModel(
         combine(
             repository.getUserById(userId),
             repository.getUserTopTags(userId),
-        ) { user, topTags ->
+            repository.getUserBadges(userId),
+        ) { user, topTags, badges, ->
                 val userUiState = UserDetailUiModel(
                     name = user.name,
                     reputation = user.reputation.toString(),
                     location = user.location ?: "Not provided",
                     imageUrl = user.profileImageUrl,
                     creationDate = user.creationDate.toString(),
-                    topTags = topTags.map { it.name }
+                    topTags = topTags.map { it.name },
+                    badges = badges.map { badge ->
+                        BadgeUiState(
+                            name = badge.name,
+                            rank = badge.rank
+                        )
+                    }
                 )
 
                 val state: UserDetailUiState = UserDetailUiState.Success(userUiState)
@@ -58,7 +71,7 @@ class UserDetailViewModel(
                 emit(
                     UserDetailUiState.Error(
                         exception.message
-                            ?: "Failed to retrieve user or top tags"
+                            ?: "Failed to retrieve user details"
                     )
                 )
             }
