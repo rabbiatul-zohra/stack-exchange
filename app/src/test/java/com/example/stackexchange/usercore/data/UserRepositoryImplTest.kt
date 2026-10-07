@@ -1,14 +1,15 @@
 package com.example.stackexchange.usercore.data
 
+import com.example.stackexchange.network.UserService
 import com.example.stackexchange.usercore.model.Badge
-import com.example.stackexchange.usercore.model.BadgeResponse
-import com.example.stackexchange.usercore.model.BadgesListResponse
-import com.example.stackexchange.usercore.model.SearchUserListResponse
+import com.example.stackexchange.network.BadgeResponse
+import com.example.stackexchange.network.BadgesListResponse
+import com.example.stackexchange.network.SearchUserListResponse
 import com.example.stackexchange.usercore.model.TopTag
-import com.example.stackexchange.usercore.model.TopTagResponse
-import com.example.stackexchange.usercore.model.TopTagsListResponse
+import com.example.stackexchange.network.TopTagResponse
+import com.example.stackexchange.network.TopTagsListResponse
 import com.example.stackexchange.usercore.model.User
-import com.example.stackexchange.usercore.model.UserResponse
+import com.example.stackexchange.network.UserResponse
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk

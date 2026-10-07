@@ -1,4 +1,4 @@
-package com.example.stackexchange.usercore.model
+package com.example.stackexchange.network
 
 data class BadgesListResponse(
     val items: List<BadgeResponse>

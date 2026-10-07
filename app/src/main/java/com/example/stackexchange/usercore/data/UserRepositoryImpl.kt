@@ -1,6 +1,7 @@
 package com.example.stackexchange.usercore.data
 
 import android.net.http.HttpException
+import com.example.stackexchange.network.UserService
 import com.example.stackexchange.usercore.model.Badge
 import com.example.stackexchange.usercore.model.TopTag
 import com.example.stackexchange.usercore.model.User

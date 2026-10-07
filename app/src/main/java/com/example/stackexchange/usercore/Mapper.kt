@@ -1,11 +1,11 @@
 package com.example.stackexchange.usercore
 
 import com.example.stackexchange.usercore.model.Badge
-import com.example.stackexchange.usercore.model.BadgeResponse
+import com.example.stackexchange.network.BadgeResponse
 import com.example.stackexchange.usercore.model.TopTag
-import com.example.stackexchange.usercore.model.TopTagResponse
+import com.example.stackexchange.network.TopTagResponse
 import com.example.stackexchange.usercore.model.User
-import com.example.stackexchange.usercore.model.UserResponse
+import com.example.stackexchange.network.UserResponse
 import java.time.Instant
 import java.time.ZoneId
 

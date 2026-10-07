@@ -1,8 +1,5 @@
-package com.example.stackexchange.usercore.data
+package com.example.stackexchange.network
 
-import com.example.stackexchange.usercore.model.BadgesListResponse
-import com.example.stackexchange.usercore.model.SearchUserListResponse
-import com.example.stackexchange.usercore.model.TopTagsListResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query

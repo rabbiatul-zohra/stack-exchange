@@ -9,7 +9,7 @@ import androidx.activity.viewModels
 import com.example.stackexchange.navigation.AppNavHost
 import com.example.stackexchange.ui.theme.StackexchangeTheme
 import com.example.stackexchange.user.presentation.UsersViewModel
-import com.example.stackexchange.usercore.RetrofitClient
+import com.example.stackexchange.network.RetrofitClient
 import com.example.stackexchange.usercore.data.UserRepositoryImpl
 import kotlin.getValue
 

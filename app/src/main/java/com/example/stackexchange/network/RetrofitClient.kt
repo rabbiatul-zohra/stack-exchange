@@ -1,6 +1,5 @@
-package com.example.stackexchange.usercore
+package com.example.stackexchange.network
 
-import com.example.stackexchange.usercore.data.UserService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import retrofit2.Retrofit
