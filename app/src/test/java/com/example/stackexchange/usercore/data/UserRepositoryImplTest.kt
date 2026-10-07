@@ -1,6 +1,9 @@
 package com.example.stackexchange.usercore.data
 
 import com.example.stackexchange.usercore.model.SearchUserListResponse
+import com.example.stackexchange.usercore.model.TopTag
+import com.example.stackexchange.usercore.model.TopTagResponse
+import com.example.stackexchange.usercore.model.TopTagsListResponse
 import com.example.stackexchange.usercore.model.User
 import com.example.stackexchange.usercore.model.UserResponse
 import io.mockk.coEvery
@@ -51,14 +54,10 @@ class UserRepositoryImplTest {
                 items = listOf(userResponse)
             )
 
-            coEvery {
-                service.getUsers(query)
-            } returns response
+            coEvery { service.getUsers(query) } returns response
 
             // When
-            val result = repository
-                .getUsers(query)
-                .first()
+            val result = repository.getUsers(query).first()
 
             // Then
             assertEquals(listOf(user), result)
@@ -75,26 +74,16 @@ class UserRepositoryImplTest {
             // Given
             val query = "unknown"
 
-            coEvery {
-                service.getUsers(query)
-            } returns SearchUserListResponse(
-                items = emptyList()
-            )
+            coEvery { service.getUsers(query) } returns
+                    SearchUserListResponse(items = emptyList())
 
             // When
-            val result = repository
-                .getUsers(query)
-                .first()
+            val result = repository.getUsers(query).first()
 
             // Then
-            assertEquals(
-                emptyList<User>(),
-                result
-            )
+            assertEquals(emptyList<User>(), result)
 
-            coVerify(exactly = 1) {
-                service.getUsers(query)
-            }
+            coVerify(exactly = 1) { service.getUsers(query) }
         }
 
     @Test
@@ -104,29 +93,20 @@ class UserRepositoryImplTest {
             // Given
             val query = "test"
 
-            coEvery {
-                service.getUsers(query)
-            } throws IOException("Network error")
+            coEvery { service.getUsers(query) } throws IOException("Network error")
 
             // When
             try {
-                repository
-                    .getUsers(query)
-                    .first()
+                repository.getUsers(query).first()
 
                 fail("Expected IOException")
             } catch (exception: IOException) {
 
                 // Then
-                assertEquals(
-                    "Network error",
-                    exception.message
-                )
+                assertEquals("Network error", exception.message)
             }
 
-            coVerify(exactly = 1) {
-                service.getUsers(query)
-            }
+            coVerify(exactly = 1) { service.getUsers(query) }
         }
 
     @Test
@@ -136,18 +116,12 @@ class UserRepositoryImplTest {
             // Given
             val userId = 1
 
-            val response = SearchUserListResponse(
-                items = listOf(userResponse)
-            )
+            val response = SearchUserListResponse(items = listOf(userResponse))
 
-            coEvery {
-                service.getUserById(userId)
-            } returns response
+            coEvery { service.getUserById(userId) } returns response
 
             // When
-            val result = repository
-                .getUserById(userId)
-                .first()
+            val result = repository.getUserById(userId).first()
 
             // Then
             assertEquals(user,result)
@@ -164,26 +138,18 @@ class UserRepositoryImplTest {
             // Given
             val userId = 999
 
-            coEvery {
-                service.getUserById(userId)
-            } returns SearchUserListResponse(
-                items = emptyList()
-            )
+            coEvery { service.getUserById(userId) } returns
+                    SearchUserListResponse(items = emptyList())
 
             // When
             try {
-                repository
-                    .getUserById(userId)
-                    .first()
+                repository.getUserById(userId).first()
 
                 fail("Expected IllegalStateException")
             } catch (exception: IllegalStateException) {
 
                 // Then
-                assertEquals(
-                    "User not found",
-                    exception.message
-                )
+                assertEquals("User not found", exception.message)
             }
 
             coVerify(exactly = 1) {
@@ -198,15 +164,11 @@ class UserRepositoryImplTest {
             // Given
             val userId = 1
 
-            coEvery {
-                service.getUserById(userId)
-            } throws IOException("Network error")
+            coEvery { service.getUserById(userId) } throws IOException("Network error")
 
             // When
             try {
-                repository
-                    .getUserById(userId)
-                    .first()
+                repository.getUserById(userId).first()
 
                 fail("Expected IOException")
             } catch (exception: IOException) {
@@ -221,5 +183,90 @@ class UserRepositoryImplTest {
             coVerify(exactly = 1) {
                 service.getUserById(userId)
             }
+        }
+
+    @Test
+    fun `given top tags response when getUserTopTags is called then mapped top tags are returned`() =
+        runTest {
+
+            // Given
+            val userId = 1
+
+            val response = TopTagsListResponse(
+                items = listOf(
+                    TopTagResponse(
+                        tag_name = "test1"
+                    ),
+                    TopTagResponse(
+                        tag_name = "test2"
+                    ),
+                    TopTagResponse(
+                        tag_name = "test3"
+                    )
+                )
+            )
+
+            coEvery {
+                service.getUserTopTags(userId)
+            } returns response
+
+            // When
+            val result = repository.getUserTopTags(userId).first()
+
+            // Then
+            assertEquals(
+                listOf(
+                    TopTag(name = "test1"),
+                    TopTag(name = "test2"),
+                    TopTag(name = "test3")
+                ),
+                result
+            )
+
+            coVerify(exactly = 1) { service.getUserTopTags(userId) }
+        }
+
+    @Test
+    fun `given empty top tags response when getUserTopTags is called then empty list is returned`() =
+        runTest {
+
+            // Given
+            val userId = 1
+
+            coEvery { service.getUserTopTags(userId) } returns
+                    TopTagsListResponse(items = emptyList())
+
+            // When
+            val result = repository.getUserTopTags(userId).first()
+
+            // Then
+            assertEquals(emptyList<TopTag>(), result)
+
+            coVerify(exactly = 1) { service.getUserTopTags(userId) }
+        }
+
+    @Test
+    fun `given service throws IOException when getUserTopTags is called then exception is thrown`() =
+        runTest {
+
+            // Given
+            val userId = 1
+            val errorMessage = "Network error"
+
+            coEvery { service.getUserTopTags(userId) } throws IOException(errorMessage)
+
+            // When
+            try {
+                repository.getUserTopTags(userId).first()
+
+                fail("Expected IOException")
+
+            } catch (exception: IOException) {
+
+                // Then
+                assertEquals(errorMessage, exception.message)
+            }
+
+            coVerify(exactly = 1) { service.getUserTopTags(userId) }
         }
 }
