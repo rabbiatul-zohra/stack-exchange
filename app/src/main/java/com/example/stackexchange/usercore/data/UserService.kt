@@ -9,7 +9,7 @@ import retrofit2.http.Query
 private const val SITE_QUERY = "stackoverflow"
 
 interface UserService {
-    @GET("2.3/users")
+    @GET("users")
     suspend fun getUsers(
         @Query("inname") name: String,
         @Query("site") site: String = SITE_QUERY,
@@ -19,13 +19,13 @@ interface UserService {
         @Query("sort") sort: String = "name"
     ): SearchUserListResponse
 
-    @GET("2.3/users/{id}")
+    @GET("users/{id}")
     suspend fun getUserById(
         @Path("id") userId: Int,
         @Query("site") site: String = SITE_QUERY
     ): SearchUserListResponse
 
-    @GET("2.3/users/{id}/top-tags")
+    @GET("users/{id}/top-tags")
     suspend fun getUserTopTags(
         @Path("id") userId: Int,
         @Query("site") site: String = SITE_QUERY

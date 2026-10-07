@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
 
-    private const val BASE_URL = "https://api.stackexchange.com/"
+    private const val BASE_URL = "https://api.stackexchange.com/2.3/"
 
     private val gson: Gson = GsonBuilder()
         .create()
