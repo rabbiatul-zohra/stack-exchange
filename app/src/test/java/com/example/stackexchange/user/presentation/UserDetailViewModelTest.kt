@@ -1,6 +1,7 @@
 package com.example.stackexchange.user.presentation
 
 import com.example.stackexchange.usercore.data.UserRepository
+import com.example.stackexchange.usercore.model.TopTag
 import com.example.stackexchange.usercore.model.User
 import io.mockk.every
 import io.mockk.mockk
@@ -20,6 +21,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 import java.time.LocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -27,12 +29,24 @@ class UserDetailViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
 
-    private lateinit var repository: UserRepository
+    private val topTags = listOf(
+        TopTag(name = "test1"),
+        TopTag(name = "test2"),
+        TopTag(name = "test3")
+    )
+
+    private val topTagNames = listOf("test1", "test2", "test3")
+    private val userId = 1
+    private var repository = mockk<UserRepository>()  {
+        every { getUserById(1) } returns flowOf(createUser())
+        every { getUserTopTags(userId) } returns flowOf(topTags)
+    }
+    private lateinit var viewModel: UserDetailViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        repository = mockk()
+        viewModel = UserDetailViewModel(userId, repository)
     }
 
     @After
@@ -45,14 +59,13 @@ class UserDetailViewModelTest {
         runTest(testDispatcher) {
 
             // Given
-            val userId = 1
 
             every {
                 repository.getUserById(userId)
             } returns flowOf(createUser())
 
             // When
-            val viewModel = UserDetailViewModel(
+            viewModel = UserDetailViewModel(
                 userId = userId,
                 repository = repository
             )
@@ -69,24 +82,6 @@ class UserDetailViewModelTest {
         runTest(testDispatcher) {
 
             // Given
-            val userId = 1
-
-            val user = createUser(
-                id = userId,
-                name = "John Doe",
-                reputation = 150,
-                location = "London"
-            )
-
-            every {
-                repository.getUserById(userId)
-            } returns flowOf(user)
-
-            val viewModel = UserDetailViewModel(
-                userId = userId,
-                repository = repository
-            )
-
             val states = mutableListOf<UserDetailUiState>()
 
             val collectJob = backgroundScope.launch(
@@ -106,11 +101,12 @@ class UserDetailViewModelTest {
                     UserDetailUiState.Loading,
                     UserDetailUiState.Success(
                         UserDetailUiModel(
-                            name = "John Doe",
+                            name = "test user",
                             reputation = "150",
-                            location = "London",
+                            location = "Manchester",
                             imageUrl = "https://example.com/image.jpg",
-                            creationDate = "2020-01-01"
+                            creationDate = "2020-01-01",
+                            topTags = topTagNames,
                         )
                     )
                 ),
@@ -129,8 +125,6 @@ class UserDetailViewModelTest {
         runTest(testDispatcher) {
 
             // Given
-            val userId = 1
-
             val user = createUser(
                 id = userId,
                 location = null
@@ -140,7 +134,7 @@ class UserDetailViewModelTest {
                 repository.getUserById(userId)
             } returns flowOf(user)
 
-            val viewModel = UserDetailViewModel(
+            viewModel = UserDetailViewModel(
                 userId = userId,
                 repository = repository
             )
@@ -176,15 +170,9 @@ class UserDetailViewModelTest {
         runTest(testDispatcher) {
 
             // Given
-            val userId = 1
+            every { repository.getUserById(userId) } returns flow { throw NullPointerException() }
 
-            every {
-                repository.getUserById(userId)
-            } returns flow {
-                throw NullPointerException()
-            }
-
-            val viewModel = UserDetailViewModel(
+            viewModel = UserDetailViewModel(
                 userId = userId,
                 repository = repository
             )
@@ -207,7 +195,7 @@ class UserDetailViewModelTest {
                 listOf(
                     UserDetailUiState.Loading,
                     UserDetailUiState.Error(
-                        "Failed to retrieve user"
+                        "Failed to retrieve user or top tags"
                     )
                 ),
                 states
@@ -228,8 +216,9 @@ class UserDetailViewModelTest {
             } returns flowOf(
                 createUser(id = userId)
             )
+            every { repository.getUserTopTags(userId) } returns flowOf(emptyList())
 
-            val viewModel = UserDetailViewModel(
+            viewModel = UserDetailViewModel(
                 userId = userId,
                 repository = repository
             )
@@ -244,18 +233,128 @@ class UserDetailViewModelTest {
             runCurrent()
 
             // Then
-            verify(exactly = 1) {
-                repository.getUserById(42)
+            verify(exactly = 1) { repository.getUserById(42) }
+
+            collectJob.cancel()
+        }
+
+    @Test
+    fun `given user has top tags when user details are loaded then top tags are included in success state`() =
+        runTest(testDispatcher) {
+
+            // Given
+
+            val states = mutableListOf<UserDetailUiState>()
+
+            val collectJob = backgroundScope.launch(
+                UnconfinedTestDispatcher(testScheduler)
+            ) {
+                viewModel.userDetailUiState.collect {
+                    states.add(it)
+                }
             }
+
+            // When
+            runCurrent()
+
+            // Then
+            val successState = states
+                .filterIsInstance<UserDetailUiState.Success>()
+                .first()
+
+            assertEquals(topTagNames, successState.user.topTags)
+
+            verify(exactly = 1) {
+                repository.getUserTopTags(userId)
+            }
+
+            collectJob.cancel()
+        }
+
+    @Test
+    fun `given user has no top tags when user details are loaded then success contains empty top tags`() =
+        runTest(testDispatcher) {
+
+            // Given
+            every { repository.getUserTopTags(userId) } returns flowOf(emptyList())
+
+            viewModel = UserDetailViewModel(
+                userId = userId,
+                repository = repository
+            )
+
+            val states = mutableListOf<UserDetailUiState>()
+
+            val collectJob = backgroundScope.launch(
+                UnconfinedTestDispatcher(testScheduler)
+            ) {
+                viewModel.userDetailUiState.collect {
+                    states.add(it)
+                }
+            }
+
+            // When
+            runCurrent()
+
+            // Then
+            val successState = states
+                .filterIsInstance<UserDetailUiState.Success>()
+                .first()
+
+            assertEquals(
+                emptyList<String>(),
+                successState.user.topTags
+            )
+
+            collectJob.cancel()
+        }
+
+    @Test
+    fun `given top tags request fails when user details are loaded then error state is emitted`() =
+        runTest(testDispatcher) {
+
+            // Given
+            val errorMessage = "Failed to retrieve user or top tags"
+
+            every { repository.getUserById(userId) } returns flowOf(createUser(id = userId))
+
+            every { repository.getUserTopTags(userId) } returns flow { throw IOException(errorMessage) }
+
+            viewModel = UserDetailViewModel(
+                userId = userId,
+                repository = repository
+            )
+
+            val states = mutableListOf<UserDetailUiState>()
+
+            val collectJob = backgroundScope.launch(
+                UnconfinedTestDispatcher(testScheduler)
+            ) {
+                viewModel.userDetailUiState.collect {
+                    states.add(it)
+                }
+            }
+
+            // When
+            runCurrent()
+
+            // Then
+            assertEquals(
+                listOf(
+                    UserDetailUiState.Loading,
+                    UserDetailUiState.Error(errorMessage)
+                ),
+                states
+            )
 
             collectJob.cancel()
         }
 
     private fun createUser(
         id: Int = 1,
-        name: String = "John Doe",
+        name: String = "test user",
         reputation: Int = 150,
-        location: String? = "London"
+        location: String? = "Manchester"
     ): User {
         return User(
             id = id,

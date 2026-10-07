@@ -73,6 +73,13 @@ fun UserDetailScreen(
                     )
                     Text("Username: ${state.user.name}")
                     Text("Reputation: ${state.user.reputation}")
+                    if (state.user.topTags.isEmpty()) {
+                        Text("No tags available")
+                    } else {
+                        Text(
+                            text = state.user.topTags.joinToString(", ")
+                        )
+                    }
                     Text("Location: ${state.user.location ?: ""}")
                     Text("Creation date: ${state.user.creationDate}")
                 }
